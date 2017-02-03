@@ -1,17 +1,28 @@
 import numpy as np
 
+import argparse
 from catch_ball import CatchBall
 from dqn_agent import DQNAgent
 
 
 if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--model_path")
+    parser.add_argument("-l", "--load", dest="load", action="store_true")
+    parser.set_defaults(load=False)
+    args = parser.parse_args()
+
     # parameters
     n_epochs = 200
 
     # environment, agent
     env = CatchBall()
     agent = DQNAgent(env.enable_actions, env.name)
-    agent.init_model()
+    if args.load:
+        agent.load_model(args.model_path)
+    else:
+        agent.init_model()
     # variables
     win = 0
 

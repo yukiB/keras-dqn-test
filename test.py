@@ -17,23 +17,19 @@ def init():
 
 
 def animate(step):
-    global win, lose
+    global n_catched
     global state_t_1, reward_t, terminal
 
     if terminal:
         env.reset()
 
-        # for log
-        if reward_t == 1:
-            win += 1
-        elif reward_t == -1:
-            lose += 1
-
-        print("WIN: {:03d}/{:03d} ({:.1f}%)".format(win, win + lose, 100 * win / (win + lose)))
-
+        print("SCORE: {0:03d}".format(n_catched))
+        n_catched = 0
     else:
         state_t = state_t_1
 
+        if reward_t == 1:
+            n_catched += 1
         # execute action in environment
         action_t = agent.select_action(state_t, 0.0)
         env.execute_action(action_t)
@@ -61,7 +57,7 @@ if __name__ == "__main__":
     agent.load_model(args.model_path)
 
     # variables
-    win, lose = 0, 0
+    n_catched = 0
     state_t_1, reward_t, terminal = env.observe()
 
     # animate
