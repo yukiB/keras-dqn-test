@@ -53,6 +53,10 @@ class DQNAgent:
         self.model.add(Flatten())
         self.model.add(Dense(64, activation='relu'))
         self.model.add(Dropout(0.2))
+        self.model.add(Dense(32, activation='relu'))
+        self.model.add(Dropout(0.2))
+        self.model.add(Dense(16, activation='relu'))
+        self.model.add(Dropout(0.2))
         self.model.add(Dense(self.n_actions))
         self.model.compile(loss='mean_squared_error',
                            optimizer="rmsprop",

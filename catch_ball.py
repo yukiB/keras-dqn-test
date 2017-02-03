@@ -1,8 +1,10 @@
 import os
 import numpy as np
+import copy
 
 
 class Ball:
+
     def __init__(self, col):
         self.col = col
         self.row = 0
@@ -11,11 +13,12 @@ class Ball:
         self.row += 1
 
     def isDroped(self, n_rows):
-        return True if self.row == n_rows else False
+        return True if self.row >= n_rows else False
 
-    
+
 class CatchBall:
-    def __init__(self):
+
+    def __init__(self, time_limit=True):
         # parameters
         self.name = os.path.splitext(os.path.basename(__file__))[0]
         self.screen_n_rows = 8
@@ -23,10 +26,11 @@ class CatchBall:
         self.player_length = 3
         self.enable_actions = (0, 1, 2)
         self.frame_rate = 5
-        self.ball_post_interval = 3
+        self.ball_post_interval = 4
         self.ball_past_time = 0
         self.past_time = 0
         self.balls = []
+        self.time_limit = time_limit
 
         # variables
         self.reset()
@@ -59,13 +63,14 @@ class CatchBall:
         else:
             self.ball_past_time += 1
 
-        self.past_time += 1
-        if self.past_time > 100:
-            self.terminal = True
-            
         # collision detection
         self.reward = 0
         self.terminal = False
+
+        self.past_time += 1
+        if self.time_limit and self.past_time > 200:
+            self.terminal = True
+
         if self.balls[0].row == self.screen_n_rows - 1:
             if self.player_col <= self.balls[0].col < self.player_col + self.player_length:
                 # catch
@@ -75,9 +80,11 @@ class CatchBall:
                 self.reward = -1
                 self.terminal = True
 
+        new_balls = []
         for b in self.balls:
-            if b.isDroped(self.screen_n_rows):
-                self.balls.pop(0)                
+            if not b.isDroped(self.screen_n_rows):
+                new_balls.append(b)
+        self.balls = copy.copy(new_balls)
 
     def draw(self):
         # reset screen
@@ -109,3 +116,5 @@ class CatchBall:
         # reset other variables
         self.reward = 0
         self.terminal = False
+        self.past_time = 0
+        self.ball_past_time = 0

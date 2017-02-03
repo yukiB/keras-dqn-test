@@ -9,12 +9,12 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model_path")
-    parser.add_argument("-l", "--load", dest="load", action="store_true")
-    parser.set_defaults(load=False)
+    parser.add_argument("-l", "--load", dest="load", action="store_true", default=False)
+    parser.add_argument("-e", "--epoch-num", dest="n_epochs", default=200, type=int)
     args = parser.parse_args()
 
     # parameters
-    n_epochs = 200
+    n_epochs = args.n_epochs
 
     # environment, agent
     env = CatchBall()
