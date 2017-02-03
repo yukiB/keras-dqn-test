@@ -30,7 +30,7 @@ class DQNAgent:
         self.n_actions = len(self.enable_actions)
         self.minibatch_size = 32
         self.replay_memory_size = 1000
-        self.learning_rate = 0.001
+        self.learning_rate = 0.00001
         self.discount_factor = 0.9
         self.exploration = 0.1
         self.model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
@@ -52,11 +52,11 @@ class DQNAgent:
         self.model.add(InputLayer(input_shape=(8, 8)))
         self.model.add(Flatten())
         self.model.add(Dense(64, activation='relu'))
-        self.model.add(Dropout(0.2))
+        #self.model.add(Dropout(0.2))
+        self.model.add(Dense(64, activation='relu'))
+        #self.model.add(Dropout(0.2))
         self.model.add(Dense(32, activation='relu'))
-        self.model.add(Dropout(0.2))
-        self.model.add(Dense(16, activation='relu'))
-        self.model.add(Dropout(0.2))
+        #self.model.add(Dropout(0.2))
         self.model.add(Dense(self.n_actions))
         self.model.compile(loss='mean_squared_error',
                            optimizer="rmsprop",
@@ -119,11 +119,13 @@ class DQNAgent:
                            optimizer="rmsprop",
                            metrics=['accuracy'])
 
-    def save_model(self):
+    def save_model(self, num=None):
         yaml_string = self.model.to_yaml()
-        open(os.path.join(f_model, 'dqn_model.yaml'), 'w').write(yaml_string)
+        model_name =  'dqn_model{0}.yaml'.format((str(num) if num else ''))
+        weight_name = 'dqn_model_weights{0}.hdf5'.format((str(num) if num else ''))
+        open(os.path.join(f_model, model_name), 'w').write(yaml_string)
         print('save weights')
-        self.model.save_weights(os.path.join(f_model, 'dqn_model_weights.hdf5'))
+        self.model.save_weights(os.path.join(f_model, weight_name))
 
     def end_session(self):
         KTF.set_session(self.old_session)
