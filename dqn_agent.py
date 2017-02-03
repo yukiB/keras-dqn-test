@@ -52,11 +52,11 @@ class DQNAgent:
         self.model.add(InputLayer(input_shape=(8, 8)))
         self.model.add(Flatten())
         self.model.add(Dense(64, activation='relu'))
-        #self.model.add(Dropout(0.2))
+        # self.model.add(Dropout(0.2))
         self.model.add(Dense(64, activation='relu'))
-        #self.model.add(Dropout(0.2))
+        # self.model.add(Dropout(0.2))
         self.model.add(Dense(32, activation='relu'))
-        #self.model.add(Dropout(0.2))
+        # self.model.add(Dropout(0.2))
         self.model.add(Dense(self.n_actions))
         self.model.compile(loss='mean_squared_error',
                            optimizer="rmsprop",
@@ -121,7 +121,7 @@ class DQNAgent:
 
     def save_model(self, num=None):
         yaml_string = self.model.to_yaml()
-        model_name =  'dqn_model{0}.yaml'.format((str(num) if num else ''))
+        model_name = 'dqn_model{0}.yaml'.format((str(num) if num else ''))
         weight_name = 'dqn_model_weights{0}.hdf5'.format((str(num) if num else ''))
         open(os.path.join(f_model, model_name), 'w').write(yaml_string)
         print('save weights')
