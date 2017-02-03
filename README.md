@@ -1,6 +1,6 @@
 # Keras implementation of DQN
 
-![demo](https://raw.githubusercontent.com/yukib/keras-dqn-simple/master/demo-catch_ball.gif)
+![demo](https://raw.githubusercontent.com/wiki/yukiB/tf-dqn-simple/images/demo-catch_ball.gif)
 
 ## Usage
 ### Train
