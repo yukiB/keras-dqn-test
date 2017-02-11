@@ -95,7 +95,7 @@ class CatchBall:
 
         # draw ball
         for b in self.balls:
-            self.screen[b.row, b.col] = 1
+            self.screen[b.row, b.col] = 0.5
 
     def observe(self):
         self.draw()
