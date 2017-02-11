@@ -68,8 +68,9 @@ if __name__ == "__main__":
             if start_replay:
                 do_replay_count += 1
                 agent.update_exploration(e)
-                agent.experience_replay()
-                do_replay_count = 0
+                if do_replay_count > 2:
+                    agent.experience_replay()
+                    do_replay_count = 0
 
             # update target network
             if total_frame % 100 == 0 and start_replay:
