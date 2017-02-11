@@ -41,7 +41,7 @@ def animate(step):
         if reward_t == 1:
             n_catched += 1
         # execute action in environment
-        action_t = agent.select_action(S, 0.0)
+        action_t = agent.select_action(state_t, 0.0)
         env.execute_action(action_t)
 
     # observe environment

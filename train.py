@@ -87,6 +87,7 @@ if __name__ == "__main__":
         if start_replay:
             print("EPOCH: {:03d}/{:03d} | WIN: {:03d} | LOSS: {:.4f} | Q_MAX: {:.4f}".format(
                 e, n_epochs - 1, win, loss / frame, Q_max / frame))
+            win = 0
         if e > 0 and e % 100 == 0:
             agent.save_model(e)
         if start_replay:
