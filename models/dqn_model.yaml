@@ -1,0 +1,42 @@
+class_name: Sequential
+config:
+- class_name: InputLayer
+  config:
+    batch_input_shape: !!python/tuple [null, 8, 8]
+    input_dtype: float32
+    name: input_1
+    sparse: false
+- class_name: Flatten
+  config: {name: flatten_1, trainable: true}
+- class_name: Dense
+  config:
+    W_constraint: null
+    W_regularizer: null
+    activation: relu
+    activity_regularizer: null
+    b_constraint: null
+    b_regularizer: null
+    bias: true
+    init: glorot_uniform
+    input_dim: !!python/object/apply:numpy.core.multiarray.scalar
+    - !!python/object/apply:numpy.dtype
+      args: [i8, 0, 1]
+      state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+    - !!binary |
+      QAAAAAAAAAA=
+    name: dense_1
+    output_dim: 64
+    trainable: true
+- class_name: Dense
+  config: {W_constraint: null, W_regularizer: null, activation: relu, activity_regularizer: null,
+    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 64,
+    name: dense_2, output_dim: 64, trainable: true}
+- class_name: Dense
+  config: {W_constraint: null, W_regularizer: null, activation: relu, activity_regularizer: null,
+    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 64,
+    name: dense_3, output_dim: 32, trainable: true}
+- class_name: Dense
+  config: {W_constraint: null, W_regularizer: null, activation: linear, activity_regularizer: null,
+    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 32,
+    name: dense_4, output_dim: 3, trainable: true}
+keras_version: 1.2.1
