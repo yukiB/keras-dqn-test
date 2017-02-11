@@ -20,7 +20,7 @@ weights_filename = 'dqn_model_weights.hdf5'
 
 INITIAL_EXPLORATION = 1.0
 FINAL_EXPLORATION = 0.1
-EXPLORATION_STEPS = 1000
+EXPLORATION_STEPS = 150
 
 class DQNAgent:
     """

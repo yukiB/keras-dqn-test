@@ -5,9 +5,13 @@ import os
 
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
+from collections import deque
 
 from catch_ball import CatchBall
 from dqn_agent import DQNAgent
+
+
+state_num = 4
 
 
 def init():
@@ -17,7 +21,7 @@ def init():
 
 
 def animate(step):
-    global n_catched
+    global n_catched, S
     global state_t_1, reward_t, terminal
 
     if terminal:
@@ -28,10 +32,16 @@ def animate(step):
     else:
         state_t = state_t_1
 
+        
+        if len(S) == 0:
+            [S.append(state_t) for i in range(state_num)]
+        else:
+            S.append(state_t)
+
         if reward_t == 1:
             n_catched += 1
         # execute action in environment
-        action_t = agent.select_action(state_t, 0.0)
+        action_t = agent.select_action(S, 0.0)
         env.execute_action(action_t)
 
     # observe environment
@@ -59,6 +69,7 @@ if __name__ == "__main__":
     # variables
     n_catched = 0
     state_t_1, reward_t, terminal = env.observe()
+    S = deque(maxlen=state_num)
 
     # animate
     fig = plt.figure(figsize=(env.screen_n_rows / 2, env.screen_n_cols / 2))
