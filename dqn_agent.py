@@ -20,7 +20,7 @@ weights_filename = 'dqn_model_weights.hdf5'
 
 INITIAL_EXPLORATION = 1.0
 FINAL_EXPLORATION = 0.1
-EXPLORATION_STEPS = 150
+EXPLORATION_STEPS = 200
 
 class DQNAgent:
     """
@@ -57,24 +57,12 @@ class DQNAgent:
 
     def init_model(self):
 
-
         self.model = Sequential()
-        #self.model.add(InputLayer(input_shape=(self.state_num, 8, 8)))
-        #self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
-        #self.model.add(Convolution2D(64, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
-        #self.model.add(Convolution2D(64, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
-        #self.model.add(Flatten())
-        #self.model.add(Dense(64, activation='relu'))
-        #self.model.add(Dense(self.n_actions))
-
-        self.model.add(InputLayer(input_shape=(8, 8)))
+        self.model.add(InputLayer(input_shape=(self.state_num, 16, 16)))
+        self.model.add(Convolution2D(32, 4, 4, border_mode='same', activation='relu', subsample=(2, 2)))
+        self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
         self.model.add(Flatten())
         self.model.add(Dense(64, activation='relu'))
-        # self.model.add(Dropout(0.2))
-        self.model.add(Dense(64, activation='relu'))
-        # self.model.add(Dropout(0.2))
-        self.model.add(Dense(32, activation='relu'))
-        # self.model.add(Dropout(0.2))
         self.model.add(Dense(self.n_actions))
         
         self.model.compile(loss='mean_squared_error',
