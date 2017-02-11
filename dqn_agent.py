@@ -20,7 +20,7 @@ weights_filename = 'dqn_model_weights.hdf5'
 
 INITIAL_EXPLORATION = 1.0
 FINAL_EXPLORATION = 0.1
-EXPLORATION_STEPS = 200
+EXPLORATION_STEPS = 500
 
 class DQNAgent:
     """
@@ -35,7 +35,7 @@ class DQNAgent:
         self.n_actions = len(self.enable_actions)
         self.minibatch_size = 32
         self.replay_memory_size = 5000
-        self.learning_rate = 0.00002
+        self.learning_rate = 0.000001
         self.discount_factor = 0.9
         self.exploration = INITIAL_EXPLORATION
         self.exploration_step = (INITIAL_EXPLORATION - FINAL_EXPLORATION) / EXPLORATION_STEPS
@@ -50,22 +50,33 @@ class DQNAgent:
         self.D = deque(maxlen=self.replay_memory_size)
 
         # state
-        self.state_num = 4
+        self.state_num = 3
         
         # variables
         self.current_loss = 0.0
 
     def init_model(self):
 
+
+        def loss_func(y_val, y_pred):
+            error = tf.abs(y_pred - y_val)
+            quadratic_part = tf.clip_by_value(error, 0.0, 1.0)
+            linear_part = error - quadratic_part
+            loss = tf.reduce_sum(0.5 * tf.square(quadratic_part) + linear_part)
+            return loss
+            
+
         self.model = Sequential()
-        self.model.add(InputLayer(input_shape=(self.state_num, 16, 16)))
-        self.model.add(Convolution2D(32, 4, 4, border_mode='same', activation='relu', subsample=(2, 2)))
+        #self.model.add(InputLayer(input_shape=(8, 8)))
+        self.model.add(InputLayer(input_shape=(1, 8, 8)))
+        #self.model.add(Convolution2D(16, 4, 4, border_mode='same', activation='relu', subsample=(2, 2)))
+        self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
         self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
         self.model.add(Flatten())
-        self.model.add(Dense(64, activation='relu'))
-        self.model.add(Dense(self.n_actions))
+        self.model.add(Dense(128, activation='relu'))
+        self.model.add(Dense(self.n_actions, activation='linear'))
         
-        self.model.compile(loss='mean_squared_error',
+        self.model.compile(loss=loss_func,
                            optimizer="rmsprop",
                            metrics=['accuracy'])
         self.target_model = copy.copy(self.model)
@@ -101,6 +112,7 @@ class DQNAgent:
     def experience_replay(self):
         state_minibatch = []
         y_minibatch = []
+        action_minibatch = []
 
         # sample random minibatch
         minibatch_size = min(len(self.D), self.minibatch_size)
@@ -116,10 +128,12 @@ class DQNAgent:
                 y_j[action_j_index] = reward_j
             else:
                 # reward_j + gamma * max_action' Q(state', action') alpha(learing rate) = 1
-                y_j[action_j_index] = reward_j + self.discount_factor * np.max(self.Q_values(state_j_1, isTarget=False))  # NOQA
+                v = np.max(self.Q_values(state_j_1, isTarget=True))
+                y_j[action_j_index] = reward_j + self.discount_factor * v   # NOQA
 
             state_minibatch.append(state_j)
             y_minibatch.append(y_j)
+            action_minibatch.append(action_j_index)
 
         # training
         self.model.fit(np.array(state_minibatch), np.array(y_minibatch), verbose=0)

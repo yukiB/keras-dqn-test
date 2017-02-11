@@ -21,12 +21,12 @@ class CatchBall:
     def __init__(self, time_limit=True):
         # parameters
         self.name = os.path.splitext(os.path.basename(__file__))[0]
-        self.screen_n_rows = 16
-        self.screen_n_cols = 16
+        self.screen_n_rows = 8
+        self.screen_n_cols = 8
         self.player_length = 3
         self.enable_actions = (0, 1, 2)
         self.frame_rate = 5
-        self.ball_post_interval = 8
+        self.ball_post_interval = 5
         self.ball_past_time = 0
         self.past_time = 0
         self.balls = []

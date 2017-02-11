@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     # parameters
     n_epochs = args.n_epochs
-    state_num = 4
+    state_num = 3
 
     # environment, agent
     env = CatchBall()
@@ -50,8 +50,8 @@ if __name__ == "__main__":
                 S.append(state_t)
 
             # execute action in environment
-            action_t = agent.select_action(S, agent.exploration)
-            #action_t = agent.select_action(state_t, agent.exploration)
+            #action_t = agent.select_action(S, agent.exploration)
+            action_t = agent.select_action([state_t], agent.exploration)
             env.execute_action(action_t)
 
             # observe environment
@@ -61,8 +61,8 @@ if __name__ == "__main__":
             start_replay = False
             new_S = copy.copy(S)
             new_S.append(state_t_1)
-            start_replay = agent.store_experience(S, action_t, reward_t, new_S, terminal)
-            #start_replay = agent.store_experience(state_t, action_t, reward_t, state_t_1, terminal)
+            #start_replay = agent.store_experience(S, action_t, reward_t, new_S, terminal)
+            start_replay = agent.store_experience([state_t], action_t, reward_t, [state_t_1], terminal)
 
             # experience replay
             if start_replay:
@@ -80,8 +80,8 @@ if __name__ == "__main__":
             frame += 1
             total_frame += 1
             loss += agent.current_loss
-            Q_max += np.max(agent.Q_values(S))
-            #Q_max += np.max(agent.Q_values(state_t))
+            #Q_max += np.max(agent.Q_values(S))
+            Q_max += np.max(agent.Q_values([state_t]))
             if reward_t == 1:
                 win += 1
 
@@ -91,6 +91,7 @@ if __name__ == "__main__":
             win = 0
         if e > 0 and e % 100 == 0:
             agent.save_model(e)
+            agent.save_model()
         if start_replay:
             e += 1
 
