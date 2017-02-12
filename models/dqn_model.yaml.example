@@ -16,7 +16,7 @@ config:
     b_regularizer: null
     bias: true
     border_mode: same
-    dim_ordering: th
+    dim_ordering: tf
     init: glorot_uniform
     name: convolution2d_1
     nb_col: 4
@@ -34,7 +34,7 @@ config:
     b_regularizer: null
     bias: true
     border_mode: same
-    dim_ordering: th
+    dim_ordering: tf
     init: glorot_uniform
     name: convolution2d_2
     nb_col: 2
@@ -52,7 +52,7 @@ config:
     b_regularizer: null
     bias: true
     border_mode: same
-    dim_ordering: th
+    dim_ordering: tf
     init: glorot_uniform
     name: convolution2d_3
     nb_col: 2
@@ -77,7 +77,7 @@ config:
       args: [i8, 0, 1]
       state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
     - !!binary |
-      AAgAAAAAAAA=
+      AAEAAAAAAAA=
     name: dense_1
     output_dim: 128
     trainable: true
