@@ -2,10 +2,64 @@ class_name: Sequential
 config:
 - class_name: InputLayer
   config:
-    batch_input_shape: !!python/tuple [null, 8, 8]
+    batch_input_shape: !!python/tuple [null, 1, 16, 16]
     input_dtype: float32
     name: input_1
     sparse: false
+- class_name: Convolution2D
+  config:
+    W_constraint: null
+    W_regularizer: null
+    activation: relu
+    activity_regularizer: null
+    b_constraint: null
+    b_regularizer: null
+    bias: true
+    border_mode: same
+    dim_ordering: th
+    init: glorot_uniform
+    name: convolution2d_1
+    nb_col: 4
+    nb_filter: 16
+    nb_row: 4
+    subsample: !!python/tuple [2, 2]
+    trainable: true
+- class_name: Convolution2D
+  config:
+    W_constraint: null
+    W_regularizer: null
+    activation: relu
+    activity_regularizer: null
+    b_constraint: null
+    b_regularizer: null
+    bias: true
+    border_mode: same
+    dim_ordering: th
+    init: glorot_uniform
+    name: convolution2d_2
+    nb_col: 2
+    nb_filter: 32
+    nb_row: 2
+    subsample: !!python/tuple [1, 1]
+    trainable: true
+- class_name: Convolution2D
+  config:
+    W_constraint: null
+    W_regularizer: null
+    activation: relu
+    activity_regularizer: null
+    b_constraint: null
+    b_regularizer: null
+    bias: true
+    border_mode: same
+    dim_ordering: th
+    init: glorot_uniform
+    name: convolution2d_3
+    nb_col: 2
+    nb_filter: 32
+    nb_row: 2
+    subsample: !!python/tuple [1, 1]
+    trainable: true
 - class_name: Flatten
   config: {name: flatten_1, trainable: true}
 - class_name: Dense
@@ -23,20 +77,12 @@ config:
       args: [i8, 0, 1]
       state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
     - !!binary |
-      QAAAAAAAAAA=
+      AAgAAAAAAAA=
     name: dense_1
-    output_dim: 64
+    output_dim: 128
     trainable: true
 - class_name: Dense
-  config: {W_constraint: null, W_regularizer: null, activation: relu, activity_regularizer: null,
-    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 64,
-    name: dense_2, output_dim: 64, trainable: true}
-- class_name: Dense
-  config: {W_constraint: null, W_regularizer: null, activation: relu, activity_regularizer: null,
-    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 64,
-    name: dense_3, output_dim: 32, trainable: true}
-- class_name: Dense
   config: {W_constraint: null, W_regularizer: null, activation: linear, activity_regularizer: null,
-    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 32,
-    name: dense_4, output_dim: 3, trainable: true}
+    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 128,
+    name: dense_2, output_dim: 3, trainable: true}
 keras_version: 1.2.1

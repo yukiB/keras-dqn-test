@@ -58,13 +58,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model_path")
     parser.add_argument("-s", "--save", dest="save", action="store_true")
+    parser.add_argument("--simple", dest="is_simple", action="store_true", default=False)
     parser.set_defaults(save=False)
     args = parser.parse_args()
 
     # environmet, agent
-    env = CatchBall(time_limit=False)
+    env = CatchBall(time_limit=False, simple=args.is_simple)
     agent = DQNAgent(env.enable_actions, env.name)
-    agent.load_model(args.model_path)
+    agent.load_model(args.model_path, simple=args.is_simple)
 
     # variables
     n_catched = 0

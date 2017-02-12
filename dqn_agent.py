@@ -18,9 +18,21 @@ f_model = './models'
 model_filename = 'dqn_model.yaml'
 weights_filename = 'dqn_model_weights.hdf5'
 
+simple_model_filename = 'dqn_model_simple.yaml'
+simple_weights_filename = 'dqn_model_weights_simple.hdf5'
+
 INITIAL_EXPLORATION = 1.0
 FINAL_EXPLORATION = 0.1
 EXPLORATION_STEPS = 500
+
+
+def loss_func(y_val, y_pred):
+    error = tf.abs(y_pred - y_val)
+    quadratic_part = tf.clip_by_value(error, 0.0, 1.0)
+    linear_part = error - quadratic_part
+    loss = tf.reduce_sum(0.5 * tf.square(quadratic_part) + linear_part)
+    return loss
+        
 
 class DQNAgent:
     """
@@ -54,15 +66,6 @@ class DQNAgent:
 
     def init_model(self):
 
-
-        def loss_func(y_val, y_pred):
-            error = tf.abs(y_pred - y_val)
-            quadratic_part = tf.clip_by_value(error, 0.0, 1.0)
-            linear_part = error - quadratic_part
-            loss = tf.reduce_sum(0.5 * tf.square(quadratic_part) + linear_part)
-            return loss
-            
-
         self.model = Sequential()
         self.model.add(InputLayer(input_shape=(1, 16, 16)))
         self.model.add(Convolution2D(16, 4, 4, border_mode='same', activation='relu', subsample=(2, 2)))
@@ -70,6 +73,20 @@ class DQNAgent:
         self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
         self.model.add(Flatten())
         self.model.add(Dense(128, activation='relu'))
+        self.model.add(Dense(self.n_actions, activation='linear'))
+        
+        self.model.compile(loss=loss_func,
+                           optimizer="rmsprop",
+                           metrics=['accuracy'])
+        self.target_model = copy.copy(self.model)
+
+    def init_simple_model(self):            
+
+        self.model = Sequential()
+        self.model.add(InputLayer(input_shape=(1, 8, 8)))
+        self.model.add(Flatten())
+        self.model.add(Dense(64, activation='relu'))
+        self.model.add(Dense(32, activation='relu'))
         self.model.add(Dense(self.n_actions, activation='linear'))
         
         self.model.compile(loss=loss_func,
@@ -138,20 +155,22 @@ class DQNAgent:
         score = self.model.evaluate(np.array(state_minibatch), np.array(y_minibatch), verbose=0)
         self.current_loss = score[0]
 
-    def load_model(self, model_path=None):
+    def load_model(self, model_path=None, simple=False):
 
-        yaml_string = open(os.path.join(f_model, model_filename)).read()
+        yaml_string = open(os.path.join(f_model,
+                                        simple_model_filename if simple else model_filename)).read()
         self.model = model_from_yaml(yaml_string)
-        self.model.load_weights(os.path.join(f_model, weights_filename))
+        self.model.load_weights(os.path.join(f_model,
+                                             simple_weights_filename if simple else weights_filename))
 
-        self.model.compile(loss='mean_squared_error',
+        self.model.compile(loss=loss_func,
                            optimizer="rmsprop",
                            metrics=['accuracy'])
 
-    def save_model(self, num=None):
+    def save_model(self, num=None, simple=False):
         yaml_string = self.model.to_yaml()
-        model_name = 'dqn_model{0}.yaml'.format((str(num) if num else ''))
-        weight_name = 'dqn_model_weights{0}.hdf5'.format((str(num) if num else ''))
+        model_name = 'dqn_model{0}{1}.yaml'.format((str(num) if num else ''), ('_simple' if simple else ''))
+        weight_name = 'dqn_model_weights{0}{1}.hdf5'.format((str(num) if num else ''), ('_simple' if simple else ''))
         open(os.path.join(f_model, model_name), 'w').write(yaml_string)
         print('save weights')
         self.model.save_weights(os.path.join(f_model, weight_name))

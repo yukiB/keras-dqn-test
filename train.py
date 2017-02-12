@@ -3,8 +3,8 @@ import numpy as np
 import argparse
 from catch_ball import CatchBall
 from dqn_agent import DQNAgent
-from collections import deque
-import copy
+#from collections import deque
+
 
 
 if __name__ == "__main__":
@@ -12,20 +12,23 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model_path")
     parser.add_argument("-l", "--load", dest="load", action="store_true", default=False)
-    parser.add_argument("-e", "--epoch-num", dest="n_epochs", default=200, type=int)
+    parser.add_argument("-e", "--epoch-num", dest="n_epochs", default=1000, type=int)
+    parser.add_argument("--simple", dest="is_simple", action="store_true", default=False)
     args = parser.parse_args()
 
     # parameters
     n_epochs = args.n_epochs
-    state_num = 3
 
     # environment, agent
-    env = CatchBall()
+    env = CatchBall(simple=args.is_simple)
     agent = DQNAgent(env.enable_actions, env.name)
     if args.load:
-        agent.load_model(args.model_path)
+        agent.load_model(args.model_path, simple=args.is_simple)
     else:
-        agent.init_model()
+        if not args.is_simple:
+            agent.init_model()
+        else:
+            agent.init_simple_model()
     # variables
     win = 0
     total_frame = 0
@@ -39,18 +42,11 @@ if __name__ == "__main__":
         do_replay_count = 0
         env.reset()
         state_t_1, reward_t, terminal = env.observe()
-        S = deque(maxlen=state_num)
         win = 0
         while not terminal:
             state_t = state_t_1
 
-            #if len(S) == 0:
-            #    [S.append(state_t) for i in range(state_num)]
-            #else:
-            #    S.append(state_t)
-
             # execute action in environment
-            #action_t = agent.select_action(S, agent.exploration)
             action_t = agent.select_action([state_t], agent.exploration)
             env.execute_action(action_t)
 
@@ -59,9 +55,6 @@ if __name__ == "__main__":
 
             # store experience
             start_replay = False
-            new_S = copy.copy(S)
-            new_S.append(state_t_1)
-            #start_replay = agent.store_experience(S, action_t, reward_t, new_S, terminal)
             start_replay = agent.store_experience([state_t], action_t, reward_t, [state_t_1], terminal)
 
             # experience replay
@@ -80,7 +73,6 @@ if __name__ == "__main__":
             frame += 1
             total_frame += 1
             loss += agent.current_loss
-            #Q_max += np.max(agent.Q_values(S))
             Q_max += np.max(agent.Q_values([state_t]))
             if reward_t == 1:
                 win += 1
@@ -90,10 +82,10 @@ if __name__ == "__main__":
                 e, n_epochs - 1, win, loss / frame, Q_max / frame))
             win = 0
         if e > 0 and e % 100 == 0:
-            agent.save_model(e)
-            agent.save_model()
+            agent.save_model(e, simple=args.is_simple)
+            agent.save_model(simple=args.is_simple)
         if start_replay:
             e += 1
 
     # save model
-    agent.save_model()
+    agent.save_model(simple=args.is_simple)
