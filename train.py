@@ -10,10 +10,10 @@ from dqn_agent import DQNAgent
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-m", "--model_path")
-    parser.add_argument("-l", "--load", dest="load", action="store_true", default=False)
-    parser.add_argument("-e", "--epoch-num", dest="n_epochs", default=1000, type=int)
-    parser.add_argument("--simple", dest="is_simple", action="store_true", default=False)
+    parser.add_argument("-m", "--model_path", help='Path ot the model files')
+    parser.add_argument("-l", "--load", dest="load", action="store_true", default=False, help='Load trained model (default: off)')
+    parser.add_argument("-e", "--epoch-num", dest="n_epochs", default=1000, type=int, help='Numpber of training epochs (default: 1000)')
+    parser.add_argument("--simple", dest="is_simple", action="store_true", default=False, help='Train simple model without cnn (8 x 8) (default: off)')
     args = parser.parse_args()
 
     # parameters

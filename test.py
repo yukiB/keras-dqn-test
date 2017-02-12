@@ -32,12 +32,6 @@ def animate(step):
     else:
         state_t = state_t_1
 
-        
-        #if len(S) == 0:
-        #    [S.append(state_t) for i in range(state_num)]
-        #else:
-        #    S.append(state_t)
-
         if reward_t == 1:
             n_catched += 1
         # execute action in environment
@@ -58,7 +52,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-m", "--model_path")
     parser.add_argument("-s", "--save", dest="save", action="store_true")
-    parser.add_argument("--simple", dest="is_simple", action="store_true", default=False)
+    parser.add_argument("--simple", dest="is_simple", action="store_true", default=False, help='Test simple model without cnn (8 x 8) (default: off)')
     parser.set_defaults(save=False)
     args = parser.parse_args()
 
