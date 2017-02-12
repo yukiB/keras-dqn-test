@@ -21,12 +21,12 @@ class CatchBall:
     def __init__(self, time_limit=True):
         # parameters
         self.name = os.path.splitext(os.path.basename(__file__))[0]
-        self.screen_n_rows = 8
-        self.screen_n_cols = 8
+        self.screen_n_rows = 16
+        self.screen_n_cols = 16
         self.player_length = 3
         self.enable_actions = (0, 1, 2)
         self.frame_rate = 5
-        self.ball_post_interval = 5
+        self.ball_post_interval = 8
         self.ball_past_time = 0
         self.past_time = 0
         self.balls = []
@@ -59,7 +59,10 @@ class CatchBall:
 
         if self.ball_past_time == self.ball_post_interval:
             self.ball_past_time = 0
-            self.balls.append(Ball(np.random.randint(self.screen_n_cols)))
+            new_pos = np.random.randint(self.screen_n_cols)
+            while abs(new_pos - self.balls[-1].col) > self.ball_post_interval + self.player_length - 1:
+                new_pos = np.random.randint(self.screen_n_cols)
+            self.balls.append(Ball(new_pos))
         else:
             self.ball_past_time += 1
 

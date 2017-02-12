@@ -44,10 +44,10 @@ if __name__ == "__main__":
         while not terminal:
             state_t = state_t_1
 
-            if len(S) == 0:
-                [S.append(state_t) for i in range(state_num)]
-            else:
-                S.append(state_t)
+            #if len(S) == 0:
+            #    [S.append(state_t) for i in range(state_num)]
+            #else:
+            #    S.append(state_t)
 
             # execute action in environment
             #action_t = agent.select_action(S, agent.exploration)

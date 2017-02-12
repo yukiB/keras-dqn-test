@@ -48,9 +48,6 @@ class DQNAgent:
 
         # replay memory
         self.D = deque(maxlen=self.replay_memory_size)
-
-        # state
-        self.state_num = 3
         
         # variables
         self.current_loss = 0.0
@@ -67,9 +64,8 @@ class DQNAgent:
             
 
         self.model = Sequential()
-        #self.model.add(InputLayer(input_shape=(8, 8)))
-        self.model.add(InputLayer(input_shape=(1, 8, 8)))
-        #self.model.add(Convolution2D(16, 4, 4, border_mode='same', activation='relu', subsample=(2, 2)))
+        self.model.add(InputLayer(input_shape=(1, 16, 16)))
+        self.model.add(Convolution2D(16, 4, 4, border_mode='same', activation='relu', subsample=(2, 2)))
         self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
         self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
         self.model.add(Flatten())
