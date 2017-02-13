@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
     # environment, agent
     env = CatchBall(simple=args.is_simple)
-    agent = DQNAgent(env.enable_actions, env.name, graves=args.graves)
+    agent = DQNAgent(env.enable_actions, env.name, graves=args.graves, ddqn=args.ddqn)
     if args.load:
         agent.load_model(args.model_path, simple=args.is_simple)
     else:
@@ -68,7 +68,7 @@ if __name__ == "__main__":
                     do_replay_count = 0
 
             # update target network
-            if total_frame % 100 == 0 and start_replay:
+            if total_frame % 500 == 0 and start_replay:
                 agent.update_target_model()
 
             # for log
