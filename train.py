@@ -14,6 +14,8 @@ if __name__ == "__main__":
     parser.add_argument("-l", "--load", dest="load", action="store_true", default=False, help='Load trained model (default: off)')
     parser.add_argument("-e", "--epoch-num", dest="n_epochs", default=1000, type=int, help='Numpber of training epochs (default: 1000)')
     parser.add_argument("--simple", dest="is_simple", action="store_true", default=False, help='Train simple model without cnn (8 x 8) (default: off)')
+    parser.add_argument("-g", "--graves", dest="graves", action="store_true", default=False, help='Use RmpropGraves (default: off)')
+    parser.add_argument("-d", "--ddqn", dest="ddqn", action="store_true", default=False, help='Use Double DQN (default: off)')
     args = parser.parse_args()
 
     # parameters
@@ -21,7 +23,7 @@ if __name__ == "__main__":
 
     # environment, agent
     env = CatchBall(simple=args.is_simple)
-    agent = DQNAgent(env.enable_actions, env.name)
+    agent = DQNAgent(env.enable_actions, env.name, graves=args.graves)
     if args.load:
         agent.load_model(args.model_path, simple=args.is_simple)
     else:
@@ -81,7 +83,7 @@ if __name__ == "__main__":
             print("EPOCH: {:03d}/{:03d} | WIN: {:03d} | LOSS: {:.4f} | Q_MAX: {:.4f}".format(
                 e, n_epochs - 1, win, loss / frame, Q_max / frame))
             win = 0
-        if e > 0 and e % 100 == 0:
+        if e > 0 and e % 200 == 0:
             agent.save_model(e, simple=args.is_simple)
             agent.save_model(simple=args.is_simple)
         if start_replay:

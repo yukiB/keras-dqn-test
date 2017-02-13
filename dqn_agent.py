@@ -39,7 +39,7 @@ class DQNAgent:
     Multi Layer Perceptron with Experience Replay
     """
 
-    def __init__(self, enable_actions, environment_name):
+    def __init__(self, enable_actions, environment_name, graves=False, ddqn=False):
         # parameters
         self.name = os.path.splitext(os.path.basename(__file__))[0]
         self.environment_name = environment_name
@@ -49,6 +49,8 @@ class DQNAgent:
         self.replay_memory_size = 5000
         self.learning_rate = 0.000001
         self.discount_factor = 0.9
+        self.use_graves = graves
+        self.use_ddqn = ddqn
         self.exploration = INITIAL_EXPLORATION
         self.exploration_step = (INITIAL_EXPLORATION - FINAL_EXPLORATION) / EXPLORATION_STEPS
         self.model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "models")
@@ -75,8 +77,9 @@ class DQNAgent:
         self.model.add(Dense(128, activation='relu'))
         self.model.add(Dense(self.n_actions, activation='linear'))
         
+        optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
         self.model.compile(loss=loss_func,
-                           optimizer="rmsprop",
+                           optimizer=optimizer,
                            metrics=['accuracy'])
         self.target_model = copy.copy(self.model)
 
@@ -88,9 +91,10 @@ class DQNAgent:
         self.model.add(Dense(64, activation='relu'))
         self.model.add(Dense(32, activation='relu'))
         self.model.add(Dense(self.n_actions, activation='linear'))
-        
+
+        optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
         self.model.compile(loss=loss_func,
-                           optimizer="rmsprop",
+                           optimizer=optimizer,
                            metrics=['accuracy'])
         self.target_model = copy.copy(self.model)
 
@@ -101,7 +105,6 @@ class DQNAgent:
                 self.exploration = FINAL_EXPLORATION        
 
     def Q_values(self, states, isTarget=False):
-        # Q(state, action) of all actions
         model = self.target_model if isTarget else self.model
         res = model.predict(np.array([states]))
 
@@ -140,9 +143,11 @@ class DQNAgent:
             if terminal:
                 y_j[action_j_index] = reward_j
             else:
-                # reward_j + gamma * max_action' Q(state', action') alpha(learing rate) = 1
-                v = np.max(self.Q_values(state_j_1, isTarget=True))
-                y_j[action_j_index] = reward_j + self.discount_factor * v   # NOQA
+                if not self.use_ddqn:
+                    v = np.max(self.Q_values(state_j_1, isTarget=True))
+                else:
+                    v = self.Q_values(state_j_1, isTarget=True)[action_j_index]
+                y_j[action_j_index] = reward_j + self.discount_factor * v
 
             state_minibatch.append(state_j)
             y_minibatch.append(y_j)
@@ -163,8 +168,9 @@ class DQNAgent:
         self.model.load_weights(os.path.join(f_model,
                                              simple_weights_filename if simple else weights_filename))
 
+        optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
         self.model.compile(loss=loss_func,
-                           optimizer="rmsprop",
+                           optimizer=optimizer,
                            metrics=['accuracy'])
 
     def save_model(self, num=None, simple=False):
