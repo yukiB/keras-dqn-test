@@ -4,10 +4,11 @@ import os
 import numpy as np
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.layers import InputLayer, Convolution2D
-from keras.models import model_from_yaml
+from keras.layers import Lambda, Input, InputLayer, Convolution2D
+from keras.models import model_from_yaml, Model
 import keras.callbacks
 import keras.backend.tensorflow_backend as KTF
+from keras import backend as K
 import tensorflow as tf
 import copy
 from util import clone_model
@@ -25,14 +26,31 @@ INITIAL_EXPLORATION = 1.0
 FINAL_EXPLORATION = 0.1
 EXPLORATION_STEPS = 500
 
+losses = {'loss': lambda y_true, y_pred: y_pred,
+          'main_output': lambda y_true, y_pred: K.zeros_like(y_pred)}
 
-def loss_func(y_val, y_pred):
-    error = tf.abs(y_pred - y_val)
+
+def loss_func(args):
+    import tensorflow as tf
+    y_true, y_pred, a = args
+    error = tf.abs(y_pred - y_true)
     quadratic_part = tf.clip_by_value(error, 0.0, 1.0)
     linear_part = error - quadratic_part
     loss = tf.reduce_sum(0.5 * tf.square(quadratic_part) + linear_part)
     return loss
+
         
+def customized_loss(args):
+    import tensorflow as tf
+    y_true, y_pred, a = args
+    a_one_hot = tf.one_hot(a, K.shape(y_pred)[1], 1.0, 0.0)
+    q_value = tf.reduce_sum(tf.mul(y_pred, a_one_hot), reduction_indices=1)
+    error = tf.abs(q_value - y_true)
+    quadratic_part = tf.clip_by_value(error, 0.0, 1.0)
+    linear_part = error - quadratic_part
+    loss = tf.reduce_sum(0.5 * tf.square(quadratic_part) + linear_part)
+    return loss
+
 
 class DQNAgent:
     """
@@ -68,35 +86,48 @@ class DQNAgent:
 
     def init_model(self):
 
-        self.model = Sequential()
-        self.model.add(InputLayer(input_shape=(1, 16, 16)))
-        self.model.add(Convolution2D(16, 4, 4, border_mode='same', activation='relu', subsample=(2, 2)))
-        self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
-        self.model.add(Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1)))
-        self.model.add(Flatten())
-        self.model.add(Dense(128, activation='relu'))
-        self.model.add(Dense(self.n_actions, activation='linear'))
+        state_input = Input(shape=(1, 16, 16), name='state')
+        action_input = Input(shape=[None], name='action', dtype='int32')
+
+        x = Convolution2D(16, 4, 4, border_mode='same', activation='relu', subsample=(2, 2))(state_input)
+        x = Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1))(x)
+        x = Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1))(x)
+        x = Flatten()(x)
+        x = Dense(128, activation='relu')(x)
+        
+        y_pred = Dense(self.n_actions, activation='linear', name='main_output')(x)
+        y_true = Input(shape=(3, ), name='y_true')
+        
+        loss_out = Lambda(loss_func, output_shape=(1,), name='loss')([y_true, y_pred, action_input])
+        self.model = Model(input=[state_input, action_input, y_true], output=[loss_out, y_pred])
         
         optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
-        self.model.compile(loss=loss_func,
+        self.model.compile(loss=losses,
                            optimizer=optimizer,
                            metrics=['accuracy'])
         self.target_model = copy.copy(self.model)
 
-    def init_simple_model(self):            
+    def init_simple_model(self):
 
-        self.model = Sequential()
-        self.model.add(InputLayer(input_shape=(1, 8, 8)))
-        self.model.add(Flatten())
-        self.model.add(Dense(64, activation='relu'))
-        self.model.add(Dense(32, activation='relu'))
-        self.model.add(Dense(self.n_actions, activation='linear'))
+        state_input = Input(shape=(1, 8, 8), name='state')
+        action_input = Input(shape=[None], name='action', dtype='int32')
+
+        x = Flatten()(state_input)
+        x = Dense(64, activation='relu')(x)
+        x = Dense(32, activation='relu')(x)
+        y_pred = Dense(3, activation='linear', name='main_output')(x)
+
+        y_true = Input(shape=(3, ), name='y_true')
+        loss_out = Lambda(loss_func, output_shape=(1, ), name='loss')([y_true, y_pred, action_input])
+        self.model = Model(input=[state_input, action_input, y_true], output=[loss_out, y_pred])
 
         optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
-        self.model.compile(loss=loss_func,
-                           optimizer=optimizer,
-                           metrics=['accuracy'])
+        self.model.compile(loss=losses,
+                      optimizer=optimizer,
+                      metrics=['accuracy'])
+
         self.target_model = copy.copy(self.model)
+
 
     def update_exploration(self, num):
         if self.exploration > FINAL_EXPLORATION:
@@ -106,9 +137,11 @@ class DQNAgent:
 
     def Q_values(self, states, isTarget=False):
         model = self.target_model if isTarget else self.model
-        res = model.predict(np.array([states]))
-
-        return res[0]
+        res = model.predict({'state': np.array([states]),
+                             'action': np.array([0]),
+                             'y_true': np.array([[0] * self.n_actions])
+                             })
+        return res[1][0]
 
     def update_target_model(self):
         self.target_model = clone_model(self.model)
@@ -128,6 +161,8 @@ class DQNAgent:
     def experience_replay(self):
         state_minibatch = []
         y_minibatch = []
+        y2_minibatch = []
+        r_minibatch = []
         action_minibatch = []
 
         # sample random minibatch
@@ -139,26 +174,34 @@ class DQNAgent:
             action_j_index = self.enable_actions.index(action_j)
 
             y_j = self.Q_values(state_j)
+            y2_j = self.Q_values(state_j)
 
             if terminal:
                 y_j[action_j_index] = reward_j
+                r_j = reward_j
             else:
                 if not self.use_ddqn:
                     v = np.max(self.Q_values(state_j_1, isTarget=True))
                 else:
                     v = self.Q_values(state_j_1, isTarget=True)[action_j_index]
                 y_j[action_j_index] = reward_j + self.discount_factor * v
+                r_j = reward_j + self.discount_factor * v
 
             state_minibatch.append(state_j)
             y_minibatch.append(y_j)
+            y2_minibatch.append(y2_j)
+            r_minibatch.append(r_j)
             action_minibatch.append(action_j_index)
 
-        # training
-        self.model.fit(np.array(state_minibatch), np.array(y_minibatch), verbose=0)
+        self.model.fit({'action': np.array(action_minibatch),
+                        'state': np.array(state_minibatch),
+                        'y_true': np.array(y_minibatch)},
+                       [np.zeros([minibatch_size]),
+                        np.array(y_minibatch)],
+                       verbose=0)
 
-        # for log
-        score = self.model.evaluate(np.array(state_minibatch), np.array(y_minibatch), verbose=0)
-        self.current_loss = score[0]
+        score = self.model.predict({'state': np.array(state_minibatch), 'action': np.array(action_minibatch), 'y_true': np.array(y_minibatch)})
+        self.current_loss = score[0][0]
 
     def load_model(self, model_path=None, simple=False):
 
@@ -169,7 +212,7 @@ class DQNAgent:
                                              simple_weights_filename if simple else weights_filename))
 
         optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
-        self.model.compile(loss=loss_func,
+        self.model.compile(loss=losses,
                            optimizer=optimizer,
                            metrics=['accuracy'])
 
