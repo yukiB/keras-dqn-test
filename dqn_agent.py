@@ -7,6 +7,12 @@ from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers import Lambda, Input, InputLayer, Convolution2D
 from keras.models import model_from_yaml, Model
 import keras.callbacks
+from keras.optimizers import RMSprop
+try:
+    from keras.optimizers import RMSpropGraves
+except:
+    print('You do not have RMSpropGraves')
+
 import keras.backend.tensorflow_backend as KTF
 from keras import backend as K
 import tensorflow as tf
@@ -39,7 +45,7 @@ def loss_func(args):
     loss = tf.reduce_sum(0.5 * tf.square(quadratic_part) + linear_part)
     return loss
 
-        
+
 def customized_loss(args):
     import tensorflow as tf
     y_true, y_pred, a = args
@@ -65,7 +71,7 @@ class DQNAgent:
         self.n_actions = len(self.enable_actions)
         self.minibatch_size = 32
         self.replay_memory_size = 5000
-        self.learning_rate = 0.000001
+        self.learning_rate = 0.00025
         self.discount_factor = 0.9
         self.use_graves = graves
         self.use_ddqn = ddqn
@@ -80,7 +86,7 @@ class DQNAgent:
 
         # replay memory
         self.D = deque(maxlen=self.replay_memory_size)
-        
+
         # variables
         self.current_loss = 0.0
 
@@ -94,16 +100,16 @@ class DQNAgent:
         x = Convolution2D(32, 2, 2, border_mode='same', activation='relu', subsample=(1, 1))(x)
         x = Flatten()(x)
         x = Dense(128, activation='relu')(x)
-        
+
         y_pred = Dense(self.n_actions, activation='linear', name='main_output')(x)
         y_true = Input(shape=(3, ), name='y_true')
-        
+
         loss_out = Lambda(loss_func, output_shape=(1,), name='loss')([y_true, y_pred, action_input])
         self.model = Model(input=[state_input, action_input, y_true], output=[loss_out, y_pred])
-        
-        optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
+
+        optimizer = RMSprop if not self.use_graves else RMSpropGraves
         self.model.compile(loss=losses,
-                           optimizer=optimizer,
+                           optimizer=optimizer(lr=self.learning_rate),
                            metrics=['accuracy'])
         self.target_model = copy.copy(self.model)
 
@@ -121,19 +127,18 @@ class DQNAgent:
         loss_out = Lambda(loss_func, output_shape=(1, ), name='loss')([y_true, y_pred, action_input])
         self.model = Model(input=[state_input, action_input, y_true], output=[loss_out, y_pred])
 
-        optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
+        optimizer = RMSprop if not self.use_graves else RMSpropGraves
         self.model.compile(loss=losses,
-                      optimizer=optimizer,
-                      metrics=['accuracy'])
+                           optimizer=optimizer(lr=self.learning_rate),
+                           metrics=['accuracy'])
 
         self.target_model = copy.copy(self.model)
-
 
     def update_exploration(self, num):
         if self.exploration > FINAL_EXPLORATION:
             self.exploration -= self.exploration_step * num
             if self.exploration < FINAL_EXPLORATION:
-                self.exploration = FINAL_EXPLORATION        
+                self.exploration = FINAL_EXPLORATION
 
     def Q_values(self, states, isTarget=False):
         model = self.target_model if isTarget else self.model
@@ -200,7 +205,8 @@ class DQNAgent:
                         np.array(y_minibatch)],
                        verbose=0)
 
-        score = self.model.predict({'state': np.array(state_minibatch), 'action': np.array(action_minibatch), 'y_true': np.array(y_minibatch)})
+        score = self.model.predict({'state': np.array(state_minibatch), 'action': np.array(
+            action_minibatch), 'y_true': np.array(y_minibatch)})
         self.current_loss = score[0][0]
 
     def load_model(self, model_path=None, simple=False):
@@ -211,15 +217,16 @@ class DQNAgent:
         self.model.load_weights(os.path.join(f_model,
                                              simple_weights_filename if simple else weights_filename))
 
-        optimizer = 'rmspropgraves' if self.use_graves else 'rmsprop'
+        optimizer = RMSprop if not self.use_graves else RMSpropGraves
         self.model.compile(loss=losses,
-                           optimizer=optimizer,
+                           optimizer=optimizer(lr=self.learning_rate),
                            metrics=['accuracy'])
 
     def save_model(self, num=None, simple=False):
         yaml_string = self.model.to_yaml()
         model_name = 'dqn_model{0}{1}.yaml'.format((str(num) if num else ''), ('_simple' if simple else ''))
-        weight_name = 'dqn_model_weights{0}{1}.hdf5'.format((str(num) if num else ''), ('_simple' if simple else ''))
+        weight_name = 'dqn_model_weights{0}{1}.hdf5'.format(
+            (str(num) if num else ''), ('_simple' if simple else ''))
         open(os.path.join(f_model, model_name), 'w').write(yaml_string)
         print('save weights')
         self.model.save_weights(os.path.join(f_model, weight_name))
