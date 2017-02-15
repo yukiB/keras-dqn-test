@@ -217,7 +217,7 @@ class DQNAgent:
 
     def save_model(self, num=None, simple=False):
         yaml_string = self.model.to_yaml()
-        model_name = 'dqn_model{0}{1}.yaml'.format((str(num) if num else ''), ('_simple' if simple else ''))
+        model_name = 'dqn_model{0}.yaml'.format(('_simple' if simple else ''))
         weight_name = 'dqn_model_weights{0}{1}.hdf5'.format(
             (str(num) if num else ''), ('_simple' if simple else ''))
         open(os.path.join(f_model, model_name), 'w').write(yaml_string)
