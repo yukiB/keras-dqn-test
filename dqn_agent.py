@@ -166,8 +166,6 @@ class DQNAgent:
     def experience_replay(self):
         state_minibatch = []
         y_minibatch = []
-        y2_minibatch = []
-        r_minibatch = []
         action_minibatch = []
 
         # sample random minibatch
@@ -179,23 +177,18 @@ class DQNAgent:
             action_j_index = self.enable_actions.index(action_j)
 
             y_j = self.Q_values(state_j)
-            y2_j = self.Q_values(state_j)
 
             if terminal:
                 y_j[action_j_index] = reward_j
-                r_j = reward_j
             else:
                 if not self.use_ddqn:
                     v = np.max(self.Q_values(state_j_1, isTarget=True))
                 else:
                     v = self.Q_values(state_j_1, isTarget=True)[action_j_index]
                 y_j[action_j_index] = reward_j + self.discount_factor * v
-                r_j = reward_j + self.discount_factor * v
 
             state_minibatch.append(state_j)
             y_minibatch.append(y_j)
-            y2_minibatch.append(y2_j)
-            r_minibatch.append(r_j)
             action_minibatch.append(action_j_index)
 
         self.model.fit({'action': np.array(action_minibatch),
