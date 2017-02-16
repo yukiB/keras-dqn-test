@@ -73,17 +73,18 @@ config:
   - class_name: Lambda
     config:
       arguments: {}
-      function: !!python/tuple ["\xE3\x01\0\0\0\0\0\0\0\t\0\0\0\x04\0\0\0C\0\0\0sq\0\
-          \0\0d\x01\0d\0\0l\0\0}\x01\0|\0\0\\\x03\0}\x02\0}\x03\0}\x04\0|\x01\0j\x01\
-          \0|\x03\0|\x02\0\x18\x83\x01\0}\x05\0|\x01\0j\x02\0|\x05\0d\x02\0d\x03\0\
-          \x83\x03\0}\x06\0|\x05\0|\x06\0\x18}\a\0|\x01\0j\x03\0d\x04\0|\x01\0j\x04\
-          \0|\x06\0\x83\x01\0\x14|\a\0\x17\x83\x01\0}\b\0|\b\0S)\x05N\xE9\0\0\0\0\
-          g\0\0\0\0\0\0\0\0g\0\0\0\0\0\0\xF0?g\0\0\0\0\0\0\xE0?)\x05\xDA\ntensorflow\xDA\
-          \x03abs\xDA\rclip_by_value\xDA\nreduce_sum\xDA\x06square)\t\xDA\x04args\xDA\
-          \x02tf\xDA\x06y_true\xDA\x06y_pred\xDA\x01a\xDA\x05error\xDA\x0Equadratic_part\xDA\
-          \vlinear_part\xDA\x04loss\xA9\0r\x10\0\0\0\xFA@/Users/yuki/Documents/2016winter/dqn/keras-dqn-test/dqn_agent.py\xDA\
-          \tloss_func\"\0\0\0s\x0E\0\0\0\0\x01\f\x01\x0F\x01\x13\x01\x15\x01\n\x01\
-          \ \x01", null, null]
+      function: !!python/tuple ["\xE3\x01\0\0\0\0\0\0\0\t\0\0\0\x04\0\0\0C\0\0\0s\x84\
+          \0\0\0d\x01\0d\0\0l\0\0}\x01\0|\0\0\\\x03\0}\x02\0}\x03\0}\x04\0|\x01\0\
+          j\x01\0|\x03\0|\x02\0\x18\x83\x01\0}\x05\0|\x01\0j\x02\0|\x05\0d\x02\0d\x03\
+          \0\x83\x03\0}\x06\0|\x05\0|\x06\0\x18}\a\0|\x01\0j\x03\0d\x04\0|\x01\0j\x04\
+          \0|\x06\0\x83\x01\0\x14|\a\0\x17\x83\x01\0}\b\0|\x01\0j\x05\0j\x06\0d\x05\
+          \0|\b\0\x83\x02\0\x01|\b\0S)\x06N\xE9\0\0\0\0g\0\0\0\0\0\0\0\0g\0\0\0\0\0\
+          \0\xF0?g\0\0\0\0\0\0\xE0?\xDA\x04loss)\a\xDA\ntensorflow\xDA\x03abs\xDA\r\
+          clip_by_value\xDA\nreduce_sum\xDA\x06square\xDA\asummary\xDA\x06scalar)\t\
+          \xDA\x04args\xDA\x02tf\xDA\x06y_true\xDA\x06y_pred\xDA\x01a\xDA\x05error\xDA\
+          \x0Equadratic_part\xDA\vlinear_partr\x02\0\0\0\xA9\0r\x12\0\0\0\xFA@/Users/yuki/Documents/2016winter/dqn/keras-dqn-test/dqn_agent.py\xDA\
+          \tloss_func&\0\0\0s\x10\0\0\0\0\x01\f\x01\x0F\x01\x13\x01\x15\x01\n\x01\
+          \ \x01\x13\x02", null, null]
       function_type: lambda
       name: loss
       output_shape: !!python/tuple [1]

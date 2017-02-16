@@ -25,7 +25,7 @@ class CatchBall:
         self.player_length = 3
         self.enable_actions = (0, 1, 2)
         self.frame_rate = 5
-        self.ball_post_interval = 4 if simple else 8
+        self.ball_post_interval = 4
         self.ball_past_time = 0
         self.past_time = 0
         self.balls = []
@@ -61,7 +61,10 @@ class CatchBall:
             self.ball_past_time = 0
             new_pos = np.random.randint(self.screen_n_cols)
             if not self.simple:
-                while len(self.balls) > 0 and abs(new_pos - self.balls[-1].col) > self.ball_post_interval + self.player_length - 1:
+                while len(self.balls) > 0 and (abs(new_pos - self.balls[-1].col) > self.ball_post_interval + self.player_length - 1 or abs(new_pos - self.balls[-1].col) < self.player_length):
+                    new_pos = np.random.randint(self.screen_n_cols)
+            else:
+                while len(self.balls) > 0 and abs(new_pos - self.balls[-1].col) < self.player_length:
                     new_pos = np.random.randint(self.screen_n_cols)
             self.balls.append(Ball(new_pos))
         else:
@@ -72,7 +75,7 @@ class CatchBall:
         self.terminal = False
 
         self.past_time += 1
-        if self.time_limit and self.past_time > 200:
+        if self.time_limit and self.past_time > 500:
             self.terminal = True
 
         if self.balls[0].row == self.screen_n_rows - 1:

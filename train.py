@@ -41,12 +41,13 @@ if __name__ == "__main__":
     total_frame = 0
     e = 0
 
+    do_replay_count = 0
+    
     while e < n_epochs:
         # reset
         frame = 0
         loss = 0.0
         Q_max = 0.0
-        do_replay_count = 0
         env.reset()
         state_t_1, reward_t, terminal = env.observe()
         win = 0
@@ -69,7 +70,7 @@ if __name__ == "__main__":
                 do_replay_count += 1
                 agent.update_exploration(e)
                 if do_replay_count > 2:
-                    agent.experience_replay()
+                    agent.experience_replay(e)
                     do_replay_count = 0
 
             # update target network
@@ -85,6 +86,7 @@ if __name__ == "__main__":
                 win += 1
 
         if start_replay:
+            agent.experience_replay(e, win)
             print("EPOCH: {:03d}/{:03d} | WIN: {:03d} | LOSS: {:.4f} | Q_MAX: {:.4f}".format(
                 e, n_epochs - 1, win, loss / frame, Q_max / frame))
             win = 0

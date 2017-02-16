@@ -2,9 +2,8 @@ from collections import deque
 import os
 
 import numpy as np
-from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, Flatten
-from keras.layers import Lambda, Input, InputLayer, Convolution2D
+from keras.layers.core import Dense, Flatten
+from keras.layers import Lambda, Input, Convolution2D
 from keras.models import model_from_yaml, Model
 import keras.callbacks
 from keras.optimizers import RMSprop
@@ -43,6 +42,8 @@ def loss_func(args):
     quadratic_part = tf.clip_by_value(error, 0.0, 1.0)
     linear_part = error - quadratic_part
     loss = tf.reduce_sum(0.5 * tf.square(quadratic_part) + linear_part)
+    tf.summary.scalar('loss', loss)
+    
     return loss
 
 
@@ -112,13 +113,15 @@ class DQNAgent:
                            optimizer=optimizer(lr=self.learning_rate),
                            metrics=['accuracy'])
         self.target_model = copy.copy(self.model)
-        tb_cb = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=10)
-        self.cbks = [tb_cb]
+        self.summary_op = tf.summary.merge_all()
+        self.summary_writer = tf.summary.FileWriter('./log', graph=self.session.graph)
+
 
     def init_simple_model(self):
 
         state_input = Input(shape=(1, 8, 8), name='state')
         action_input = Input(shape=[None], name='action', dtype='int32')
+        
 
         x = Flatten()(state_input)
         x = Dense(64, activation='relu')(x)
@@ -135,8 +138,8 @@ class DQNAgent:
                            metrics=['accuracy'])
 
         self.target_model = copy.copy(self.model)
-        tb_cb = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=10)
-        self.cbks = [tb_cb]
+        self.summary_op = tf.summary.merge_all()
+        self.summary_writer = tf.summary.FileWriter('./log', graph=self.session.graph)
 
 
     def update_exploration(self, num):
@@ -168,7 +171,7 @@ class DQNAgent:
         self.D.append((states, action, reward, states_1, terminal))
         return (len(self.D) >= self.replay_memory_size)
 
-    def experience_replay(self):
+    def experience_replay(self, step, score=None):
         state_minibatch = []
         y_minibatch = []
         action_minibatch = []
@@ -195,7 +198,15 @@ class DQNAgent:
             state_minibatch.append(state_j)
             y_minibatch.append(y_j)
             action_minibatch.append(action_j_index)
-
+            
+        validation_data = None
+        if score != None:
+            validation_data = ({'action': np.array(action_minibatch),
+                                'state': np.array(state_minibatch),
+                                'y_true': np.array(y_minibatch)},
+                               [np.zeros([minibatch_size]),
+                                np.array(y_minibatch)])
+            
         self.model.fit({'action': np.array(action_minibatch),
                         'state': np.array(state_minibatch),
                         'y_true': np.array(y_minibatch)},
@@ -203,10 +214,20 @@ class DQNAgent:
                         np.array(y_minibatch)],
                        batch_size=minibatch_size,
                        nb_epoch=1,
-                       verbose=0)
+                       verbose=0,
+                       validation_data=validation_data)
 
-        score = self.model.predict({'state': np.array(state_minibatch), 'action': np.array(
-            action_minibatch), 'y_true': np.array(y_minibatch)})
+        if self.model.validation_data and hasattr(self, 'summary_op'):
+            val_data = self.model.validation_data
+            tensors = self.model.inputs
+            feed_dict = dict(zip(tensors, val_data))
+            result = self.session.run([self.summary_op], feed_dict=feed_dict)
+            summary_str = result[0]
+            self.summary_writer.add_summary(summary_str, step)
+            
+        score = self.model.predict({'state': np.array(state_minibatch),
+                                    'action': np.array(action_minibatch),
+                                    'y_true': np.array(y_minibatch)})
         self.current_loss = score[0][0]
 
     def load_model(self, model_path=None, simple=False):
