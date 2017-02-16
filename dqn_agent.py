@@ -112,6 +112,8 @@ class DQNAgent:
                            optimizer=optimizer(lr=self.learning_rate),
                            metrics=['accuracy'])
         self.target_model = copy.copy(self.model)
+        tb_cb = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=10)
+        self.cbks = [tb_cb]
 
     def init_simple_model(self):
 
@@ -126,13 +128,16 @@ class DQNAgent:
         y_true = Input(shape=(3, ), name='y_true')
         loss_out = Lambda(loss_func, output_shape=(1, ), name='loss')([y_true, y_pred, action_input])
         self.model = Model(input=[state_input, action_input, y_true], output=[loss_out, y_pred])
-
+              
         optimizer = RMSprop if not self.use_graves else RMSpropGraves
         self.model.compile(loss=losses,
                            optimizer=optimizer(lr=self.learning_rate),
                            metrics=['accuracy'])
 
         self.target_model = copy.copy(self.model)
+        tb_cb = keras.callbacks.TensorBoard(log_dir='./log', histogram_freq=10)
+        self.cbks = [tb_cb]
+
 
     def update_exploration(self, num):
         if self.exploration > FINAL_EXPLORATION:
@@ -196,6 +201,8 @@ class DQNAgent:
                         'y_true': np.array(y_minibatch)},
                        [np.zeros([minibatch_size]),
                         np.array(y_minibatch)],
+                       batch_size=minibatch_size,
+                       nb_epoch=1,
                        verbose=0)
 
         score = self.model.predict({'state': np.array(state_minibatch), 'action': np.array(

@@ -20,6 +20,7 @@ if __name__ == "__main__":
                         default=False, help='Use RmpropGraves (default: off)')
     parser.add_argument("-d", "--ddqn", dest="ddqn", action="store_true",
                         default=False, help='Use Double DQN (default: off)')
+    parser.add_argument("-s", "--save-interval", dest="save_interval", default=1000, type=int)
     args = parser.parse_args()
 
     # parameters
@@ -87,7 +88,7 @@ if __name__ == "__main__":
             print("EPOCH: {:03d}/{:03d} | WIN: {:03d} | LOSS: {:.4f} | Q_MAX: {:.4f}".format(
                 e, n_epochs - 1, win, loss / frame, Q_max / frame))
             win = 0
-        if e > 0 and e % 200 == 0:
+        if e > 0 and e % args.save_interval == 0:
             agent.save_model(e, simple=args.is_simple)
             agent.save_model(simple=args.is_simple)
         if start_replay:

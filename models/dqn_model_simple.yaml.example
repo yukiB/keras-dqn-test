@@ -1,38 +1,101 @@
-class_name: Sequential
+class_name: Model
 config:
-- class_name: InputLayer
-  config:
-    batch_input_shape: !!python/tuple [null, 1, 8, 8]
-    input_dtype: float32
-    name: input_1
-    sparse: false
-- class_name: Flatten
-  config: {name: flatten_1, trainable: true}
-- class_name: Dense
-  config:
-    W_constraint: null
-    W_regularizer: null
-    activation: relu
-    activity_regularizer: null
-    b_constraint: null
-    b_regularizer: null
-    bias: true
-    init: glorot_uniform
-    input_dim: !!python/object/apply:numpy.core.multiarray.scalar
-    - !!python/object/apply:numpy.dtype
-      args: [i8, 0, 1]
-      state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
-    - !!binary |
-      QAAAAAAAAAA=
+  input_layers:
+  - [state, 0, 0]
+  - [action, 0, 0]
+  - [y_true, 0, 0]
+  layers:
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple [null, 1, 8, 8]
+      input_dtype: float32
+      name: state
+      sparse: false
+    inbound_nodes: []
+    name: state
+  - class_name: Flatten
+    config: {name: flatten_1, trainable: true}
+    inbound_nodes:
+    - - [state, 0, 0]
+    name: flatten_1
+  - class_name: Dense
+    config:
+      W_constraint: null
+      W_regularizer: null
+      activation: relu
+      activity_regularizer: null
+      b_constraint: null
+      b_regularizer: null
+      bias: true
+      init: glorot_uniform
+      input_dim: !!python/object/apply:numpy.core.multiarray.scalar
+      - !!python/object/apply:numpy.dtype
+        args: [i8, 0, 1]
+        state: !!python/tuple [3, <, null, null, null, -1, -1, 0]
+      - !!binary |
+        QAAAAAAAAAA=
+      name: dense_1
+      output_dim: 64
+      trainable: true
+    inbound_nodes:
+    - - [flatten_1, 0, 0]
     name: dense_1
-    output_dim: 64
-    trainable: true
-- class_name: Dense
-  config: {W_constraint: null, W_regularizer: null, activation: relu, activity_regularizer: null,
-    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 64,
-    name: dense_2, output_dim: 32, trainable: true}
-- class_name: Dense
-  config: {W_constraint: null, W_regularizer: null, activation: linear, activity_regularizer: null,
-    b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 32,
-    name: dense_3, output_dim: 3, trainable: true}
+  - class_name: Dense
+    config: {W_constraint: null, W_regularizer: null, activation: relu, activity_regularizer: null,
+      b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 64,
+      name: dense_2, output_dim: 32, trainable: true}
+    inbound_nodes:
+    - - [dense_1, 0, 0]
+    name: dense_2
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple [null, 3]
+      input_dtype: float32
+      name: y_true
+      sparse: false
+    inbound_nodes: []
+    name: y_true
+  - class_name: Dense
+    config: {W_constraint: null, W_regularizer: null, activation: linear, activity_regularizer: null,
+      b_constraint: null, b_regularizer: null, bias: true, init: glorot_uniform, input_dim: 32,
+      name: main_output, output_dim: 3, trainable: true}
+    inbound_nodes:
+    - - [dense_2, 0, 0]
+    name: main_output
+  - class_name: InputLayer
+    config:
+      batch_input_shape: !!python/tuple [null, null]
+      input_dtype: int32
+      name: action
+      sparse: false
+    inbound_nodes: []
+    name: action
+  - class_name: Lambda
+    config:
+      arguments: {}
+      function: !!python/tuple ["\xE3\x01\0\0\0\0\0\0\0\t\0\0\0\x04\0\0\0C\0\0\0sq\0\
+          \0\0d\x01\0d\0\0l\0\0}\x01\0|\0\0\\\x03\0}\x02\0}\x03\0}\x04\0|\x01\0j\x01\
+          \0|\x03\0|\x02\0\x18\x83\x01\0}\x05\0|\x01\0j\x02\0|\x05\0d\x02\0d\x03\0\
+          \x83\x03\0}\x06\0|\x05\0|\x06\0\x18}\a\0|\x01\0j\x03\0d\x04\0|\x01\0j\x04\
+          \0|\x06\0\x83\x01\0\x14|\a\0\x17\x83\x01\0}\b\0|\b\0S)\x05N\xE9\0\0\0\0\
+          g\0\0\0\0\0\0\0\0g\0\0\0\0\0\0\xF0?g\0\0\0\0\0\0\xE0?)\x05\xDA\ntensorflow\xDA\
+          \x03abs\xDA\rclip_by_value\xDA\nreduce_sum\xDA\x06square)\t\xDA\x04args\xDA\
+          \x02tf\xDA\x06y_true\xDA\x06y_pred\xDA\x01a\xDA\x05error\xDA\x0Equadratic_part\xDA\
+          \vlinear_part\xDA\x04loss\xA9\0r\x10\0\0\0\xFA@/Users/yuki/Documents/2016winter/dqn/keras-dqn-test/dqn_agent.py\xDA\
+          \tloss_func\"\0\0\0s\x0E\0\0\0\0\x01\f\x01\x0F\x01\x13\x01\x15\x01\n\x01\
+          \ \x01", null, null]
+      function_type: lambda
+      name: loss
+      output_shape: !!python/tuple [1]
+      output_shape_type: raw
+      trainable: true
+    inbound_nodes:
+    - - [y_true, 0, 0]
+      - [main_output, 0, 0]
+      - [action, 0, 0]
+    name: loss
+  name: model_1
+  output_layers:
+  - [loss, 0, 0]
+  - [main_output, 0, 0]
 keras_version: 1.2.1
